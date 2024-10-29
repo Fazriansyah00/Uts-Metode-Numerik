@@ -1,0 +1,72 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+def f(R):
+    L = 0.5  # Induktansi dalam H
+    C = 10e-6  # Kapasitansi dalam F
+    return 1 / (2 * np.pi * np.sqrt(L * (1 - (R**2 / (4 * L**2)))))
+
+def f_prime(R):
+    L = 0.5
+    term = (1 - (R**2 / (4 * L**2)))
+    if term <= 0:
+        return np.nan  # Menghindari pembagian dengan nol atau akar negatif
+    return (1 / (2 * np.pi)) * (1 / np.sqrt(term)) * (-R / (2 * L**2))
+
+# Implementasi metode biseksi
+def biseksi(f, a, b, tol):
+    if f(a) * f(b) >= 0:
+        raise ValueError("f(a) dan f(b) harus memiliki tanda yang berbeda.")
+    
+    while (b - a) / 2.0 > tol:
+        midpoint = (a + b) / 2.0
+        if f(midpoint) == 0:
+            return midpoint
+        elif f(a) * f(midpoint) < 0:
+            b = midpoint
+        else:
+            a = midpoint
+    return (a + b) / 2.0
+
+# Implementasi metode Newton-Raphson
+def newton_raphson(f, f_prime, R0, tol):
+    R = R0
+    while abs(f(R)) > tol:
+        derivative = f_prime(R)
+        if derivative == 0:
+            raise ValueError("Turunan sama dengan nol, tidak dapat melanjutkan.")
+        R = R - f(R) / derivative
+    return R
+
+# Bagian a: Fungsi f(R) dan f'(R)
+print("Fungsi f(R) dan f'(R):")
+print(f(50))
+print(f_prime(50))
+
+# Bagian b: Implementasi metode biseksi
+R_biseksi = biseksi(lambda R: f(R) - 1000, 0, 100, 0.1)
+print("Nilai R menggunakan metode biseksi:", R_biseksi)
+
+# Bagian c: Implementasi metode Newton-Raphson
+R_newton = newton_raphson(lambda R: f(R) - 1000, f_prime, 50, 0.1)
+print("Nilai R menggunakan metode Newton-Raphson:", R_newton)
+
+# Bagian d: Perbandingan hasil dan kecepatan konvergensi
+biseksi_results = []
+newton_results = []
+
+# Menggunakan titik awal yang berbeda untuk masing-masing iterasi
+for i in range(1, 51):
+    R_b = biseksi(lambda R: f(R) - 1000, 0, 100, 0.1)
+    biseksi_results.append(R_b)
+
+    R_n = newton_raphson(lambda R: f(R) - 1000, f_prime, 50 + i, 0.1)  # Mengubah titik awal
+    newton_results.append(R_n)
+
+plt.plot(biseksi_results, label='Metode Biseksi')
+plt.plot(newton_results, label='Metode Newton-Raphson')
+plt.xlabel('Iterasi')
+plt.ylabel('Nilai R')
+plt.legend()
+plt.title('Perbandingan Metode Konvergensi')
+plt.show()
